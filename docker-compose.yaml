@@ -1,0 +1,107 @@
+version: '3'
+
+services:
+  php:
+    image: php:8.2-fpm-alpine
+    container_name: php8.2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - PHP_IDE_CONFIG="serverName=myapp_php"
+    ports:
+      - "9501:9501"
+      - "30000:30000"
+      - "30001:30001"
+      - "30002:30002"
+      - "30003:30003"
+      - "30004:30004"
+      - "30005:30005"
+    volumes:
+      - .:/var/www/html/
+    depends_on:
+      - mysql
+      - redis
+    tty: true
+    networks:
+      - my-network
+
+  python:
+    image: python:3.9-alpine
+    container_name: python
+    restart: always
+    command: tail -f /dev/null
+    volumes:
+      - .:/app
+    networks:
+      - my-network
+
+  nodejs:
+    image: node:14-alpine
+    container_name: nodejs
+    restart: unless-stopped
+    command: tail -f /dev/null
+    volumes:
+      - .:/app
+    networks:
+      - my-network
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypass
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - my-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - my-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongo:/var/lib/mongodb
+    networks:
+      - my-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - my-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - my-network
+
+networks:
+  my-network:
+
+
